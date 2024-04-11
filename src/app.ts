@@ -4,6 +4,7 @@ import categoryRouter from "./category/category-router";
 import productRouter from "./product/product-router";
 import cookieParser from "cookie-parser";
 const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
 
