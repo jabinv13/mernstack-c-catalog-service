@@ -29,8 +29,19 @@ router.put(
     asyncWrapper(categoryController.update),
 );
 
+router.get(
+    "/:categoryId",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    asyncWrapper(categoryController.getCategory),
+);
+router.delete(
+    "/:categoryId",
+    authenticate,
+    canAccess([Roles.ADMIN]),
+    asyncWrapper(categoryController.destroy),
+);
+
 router.get("/", asyncWrapper(categoryController.index));
-router.get("/:categoryId", asyncWrapper(categoryController.getCategory));
-router.delete("/:categoryId", asyncWrapper(categoryController.destroy));
 
 export default router;
