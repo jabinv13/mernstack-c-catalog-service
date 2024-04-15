@@ -73,9 +73,13 @@ export class ProductController {
 
         const product = await this.productService.getProduct(productId);
 
+        if (!product) {
+            return next(createHttpError(404, "Product not found"));
+        }
+
         if ((req as AuthRequest).auth.role !== Roles.ADMIN) {
             const tenant = (req as AuthRequest).auth.tenant;
-            if (product && product.tenantId !== tenant) {
+            if (product.tenantId !== tenant) {
                 return next(
                     createHttpError(
                         403,
@@ -88,7 +92,7 @@ export class ProductController {
         let oldImage: string | undefined;
 
         if (req.files?.image) {
-            oldImage = product!.image;
+            oldImage = product.image;
 
             const image = req.files.image as UploadedFile;
             imageName = uuidv4();
