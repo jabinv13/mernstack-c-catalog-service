@@ -11,6 +11,7 @@ export interface Product {
     image: string;
 }
 export interface ProductData {
+    _id: mongoose.Types.ObjectId;
     name: string;
     description: string;
     priceConfiguration: string;
@@ -43,4 +44,9 @@ export interface Filter {
     tenantId?: string;
     categoryId?: mongoose.Types.ObjectId;
     isPublish?: boolean;
+}
+
+export interface PaginateQuery {
+    page: number;
+    limit: number;
 }

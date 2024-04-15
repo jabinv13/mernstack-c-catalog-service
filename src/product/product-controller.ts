@@ -2,10 +2,16 @@ import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { ProductService } from "./product-service";
-import { CreateProductRequest, Filter, ProductData } from "./product-types";
+import {
+    CreateProductRequest,
+    Filter,
+    Product,
+    ProductData,
+} from "./product-types";
 import { UploadedFile } from "express-fileupload";
 import { v4 as uuidv4 } from "uuid";
 import { FileStorage } from "../common/types/storage";
+
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
 import mongoose from "mongoose";
@@ -58,7 +64,7 @@ export class ProductController {
             product as ProductData,
         );
 
-        res.json({ id: newProduct._id });
+        res.json({ name: newProduct.name });
     };
     update = async (
         req: CreateProductRequest,
@@ -154,8 +160,28 @@ export class ProductController {
         const products = await this.productService.getProducts(
             q as string,
             filters,
+            {
+                page: req.query.page ? parseInt(req.query.page as string) : 1,
+                limit: req.query.limit
+                    ? parseInt(req.query.limit as string)
+                    : 10,
+            },
         );
 
-        res.json(products);
+        const finalProducts = (products.data as Product[]).map(
+            (product: Product) => {
+                return {
+                    ...product,
+                    image: this.storage.getObjectUri(product.image),
+                };
+            },
+        );
+
+        res.json({
+            data: finalProducts,
+            total: products.total,
+            pageSize: products.limit,
+            currentPage: products.page,
+        });
     };
 }
