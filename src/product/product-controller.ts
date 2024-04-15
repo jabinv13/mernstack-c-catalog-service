@@ -6,6 +6,8 @@ import { CreateProductRequest, ProductData } from "./product-types";
 import { UploadedFile } from "express-fileupload";
 import { v4 as uuidv4 } from "uuid";
 import { FileStorage } from "../common/types/storage";
+import { AuthRequest } from "../common/types";
+import { Roles } from "../common/constants";
 
 export class ProductController {
     constructor(
@@ -56,5 +58,72 @@ export class ProductController {
         );
 
         res.json({ id: newProduct._id });
+    };
+    update = async (
+        req: CreateProductRequest,
+        res: Response,
+        next: NextFunction,
+    ) => {
+        const result = validationResult(req);
+        if (!result.isEmpty()) {
+            return next(createHttpError(400, result.array()[0].msg as string));
+        }
+
+        const { productId } = req.params;
+
+        const product = await this.productService.getProduct(productId);
+
+        if ((req as AuthRequest).auth.role !== Roles.ADMIN) {
+            const tenant = (req as AuthRequest).auth.tenant;
+            if (product && product.tenantId !== tenant) {
+                return next(
+                    createHttpError(
+                        403,
+                        "You are not allowed to access this product",
+                    ),
+                );
+            }
+        }
+        let imageName: string | undefined;
+        let oldImage: string | undefined;
+
+        if (req.files?.image) {
+            oldImage = product!.image;
+
+            const image = req.files.image as UploadedFile;
+            imageName = uuidv4();
+
+            await this.storage.upload({
+                filename: imageName,
+                fileData: image.data.buffer,
+            });
+
+            await this.storage.delete(oldImage);
+        }
+        const {
+            name,
+            description,
+            priceConfiguration,
+            attributes,
+            tenantId,
+            categoryId,
+            isPublish,
+        } = req.body;
+
+        const productToUpdate = {
+            name,
+            description,
+            priceConfiguration: JSON.parse(priceConfiguration) as string,
+            attributes: JSON.parse(attributes) as string,
+            tenantId,
+            categoryId,
+            isPublish,
+            image: imageName,
+        };
+        await this.productService.updateProduct(
+            productId,
+            productToUpdate as ProductData,
+        );
+        res.json({ id: productId });
     };
 }

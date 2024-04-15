@@ -20,6 +20,20 @@ export interface ProductData {
     image: string;
 }
 
+export interface UpdateProductData {
+    name: string;
+    description: string;
+    priceConfiguration: string;
+    attributes: string;
+    tenantId: string;
+    categoryId: string;
+    isPublish: boolean;
+    image: string | null;
+}
+
 export interface CreateProductRequest extends Request {
     body: ProductData;
+}
+export interface UpdateProductRequest extends Request {
+    body: UpdateProductData;
 }
