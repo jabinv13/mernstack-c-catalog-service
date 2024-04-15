@@ -1,13 +1,14 @@
-import { NextFunction, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { ProductService } from "./product-service";
-import { CreateProductRequest, ProductData } from "./product-types";
+import { CreateProductRequest, Filter, ProductData } from "./product-types";
 import { UploadedFile } from "express-fileupload";
 import { v4 as uuidv4 } from "uuid";
 import { FileStorage } from "../common/types/storage";
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
+import mongoose from "mongoose";
 
 export class ProductController {
     constructor(
@@ -129,5 +130,32 @@ export class ProductController {
             productToUpdate as ProductData,
         );
         res.json({ id: productId });
+    };
+    index = async (req: Request, res: Response) => {
+        const { q, tenantId, categoryId, isPublish } = req.query;
+
+        const filters: Filter = {};
+
+        if (isPublish === "true") {
+            filters.isPublish = true;
+        }
+
+        if (tenantId) filters.tenantId = tenantId as string;
+
+        if (
+            categoryId &&
+            mongoose.Types.ObjectId.isValid(categoryId as string)
+        ) {
+            filters.categoryId = new mongoose.Types.ObjectId(
+                categoryId as string,
+            );
+        }
+
+        const products = await this.productService.getProducts(
+            q as string,
+            filters,
+        );
+
+        res.json(products);
     };
 }
