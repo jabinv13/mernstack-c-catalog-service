@@ -2,6 +2,7 @@ import { Request } from "express";
 import mongoose from "mongoose";
 
 export interface Product {
+    _id?: mongoose.Types.ObjectId;
     name: string;
     description: string;
     priceConfiguration: string;
@@ -11,7 +12,7 @@ export interface Product {
     image: string;
 }
 export interface ProductData {
-    _id: mongoose.Types.ObjectId;
+    _id?: mongoose.Types.ObjectId;
     name: string;
     description: string;
     priceConfiguration: string;

@@ -15,11 +15,13 @@ import { FileStorage } from "../common/types/storage";
 import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
 import mongoose from "mongoose";
+import { MessageProducerBroker } from "../common/types/broker";
 
 export class ProductController {
     constructor(
         private productService: ProductService,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
     ) {}
     create = async (
         req: CreateProductRequest,
@@ -61,10 +63,21 @@ export class ProductController {
         };
 
         const newProduct = await this.productService.createProduct(
-            product as ProductData,
+            product as unknown as Product,
         );
 
-        res.json({ name: newProduct.name });
+        //Send product to kafka
+        //todo: move topic name to config
+
+        await this.broker.sendMessage(
+            "product",
+            JSON.stringify({
+                id: newProduct._id,
+                priceConfiguration: newProduct.priceConfiguration,
+            }),
+        );
+
+        res.json({ name: newProduct._id });
     };
     update = async (
         req: CreateProductRequest,
@@ -131,9 +144,17 @@ export class ProductController {
             isPublish,
             image: imageName,
         };
-        await this.productService.updateProduct(
+        const newProduct = await this.productService.updateProduct(
             productId,
             productToUpdate as ProductData,
+        );
+
+        await this.broker.sendMessage(
+            "product",
+            JSON.stringify({
+                id: newProduct._id,
+                priceConfiguration: newProduct.priceConfiguration,
+            }),
         );
         res.json({ id: productId });
     };
