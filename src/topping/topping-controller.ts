@@ -4,11 +4,13 @@ import { v4 as uuidv4 } from "uuid";
 import { FileStorage } from "../common/types/storage";
 import { ToppingService } from "./topping-service";
 import { CreataeRequestBody, Topping } from "./topping-types";
+import { MessageProducerBroker } from "../common/types/broker";
 
 export class ToppingController {
     constructor(
         private storage: FileStorage,
         private toppingService: ToppingService,
+        private broker: MessageProducerBroker,
     ) {}
 
     create = async (
@@ -33,6 +35,24 @@ export class ToppingController {
                 tenantId: req.body.tenantId,
             } as Topping);
             // todo: add logging
+
+            //send topping to kafka
+
+            await this.broker.sendMessage(
+                "topping",
+                JSON.stringify({
+                    id: savedTopping._id,
+                    price: savedTopping.price,
+                    tenantId: savedTopping.tenantId,
+                }),
+            );
+
+            // await this.broker.sendMessage(
+            //     "topping",
+            //     JSON.stringify({
+            //         id: "jabin",
+            //     }),
+            // );
 
             res.json({ id: savedTopping._id });
         } catch (err) {
