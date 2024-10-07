@@ -16,6 +16,7 @@ import { AuthRequest } from "../common/types";
 import { Roles } from "../common/constants";
 import mongoose from "mongoose";
 import { MessageProducerBroker } from "../common/types/broker";
+import { mapToObject } from "../utils";
 
 export class ProductController {
     constructor(
@@ -73,7 +74,12 @@ export class ProductController {
             "product",
             JSON.stringify({
                 id: newProduct._id,
-                priceConfiguration: newProduct.priceConfiguration,
+                priceConfiguration: mapToObject(
+                    newProduct.priceConfiguration as unknown as Map<
+                        string,
+                        number
+                    >,
+                ),
             }),
         );
 
@@ -144,7 +150,7 @@ export class ProductController {
             isPublish,
             image: imageName,
         };
-        const newProduct = await this.productService.updateProduct(
+        const newProduct: Product = await this.productService.updateProduct(
             productId,
             productToUpdate as ProductData,
         );
@@ -153,7 +159,12 @@ export class ProductController {
             "product",
             JSON.stringify({
                 id: newProduct._id,
-                priceConfiguration: newProduct.priceConfiguration,
+                priceConfiguration: mapToObject(
+                    newProduct.priceConfiguration as unknown as Map<
+                        string,
+                        any
+                    >,
+                ),
             }),
         );
         res.json({ id: productId });
