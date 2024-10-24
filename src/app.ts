@@ -5,6 +5,7 @@ import productRouter from "./product/product-router";
 import toppingRouter from "./topping/topping-router";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import config from "config";
 const app = express();
 
 app.use(express.json());
@@ -22,14 +23,15 @@ app.get("/", (req: Request, res: Response) => {
 //     }),
 // );
 
+const ALLOWED_DOMAINS = [
+    config.get("frontend.clientUI"),
+    config.get("frontend.adminUI"),
+];
+
 app.use(
     cors({
         //todo:move to .env file
-        origin: [
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://localhost:8000",
-        ],
+        origin: ALLOWED_DOMAINS as string[],
         credentials: true,
     }),
 );
